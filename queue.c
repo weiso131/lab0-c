@@ -40,15 +40,16 @@ bool q_insert_head(struct list_head *head, char *s)
     element_t *new_element = malloc(sizeof(element_t));
     if (new_element == NULL)
         return false;
-    new_element->value = malloc(sizeof(char) * strlen(s));
+    new_element->value = malloc(sizeof(char) * (strlen(s) + 1));
     if (new_element->value == NULL) {
         free(new_element);
         return false;
     }
-
+    *(new_element->value + strlen(s)) = '\0';
 
     for (int i = 0; i < strlen(s); i++)
         *(new_element->value + i) = *(s + i);
+
     list_add(&(new_element->list), head);
     return true;
 }
