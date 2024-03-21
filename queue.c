@@ -12,6 +12,16 @@
 
 
 /* Create an empty queue */
+
+#define remove_element(head, direction, sp, buf_size)                       \
+    if (!head)                                                              \
+        return NULL;                                                        \
+    element_t *element_head = list_entry(head->direction, element_t, list); \
+    list_del(head->direction);                                              \
+    if (sp)                                                                 \
+        strncpy(sp, element_head->value, bufsize);                          \
+    return element_head;
+
 struct list_head *q_new()
 {
     struct list_head *head = malloc(sizeof(struct list_head));
@@ -61,15 +71,13 @@ bool q_insert_tail(struct list_head *head, char *s)
 }
 
 /* Remove an element from head of queue */
-element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
-{
-    return NULL;
-}
+element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize){
+    remove_element(head, next, sp, bufsize)}
 
 /* Remove an element from tail of queue */
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
-    return NULL;
+    remove_element(head, prev, sp, bufsize)
 }
 
 /* Return number of elements in queue */
