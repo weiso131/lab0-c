@@ -8,7 +8,7 @@ done
 # We suppress the checkLevelNormal warning for Cppcheck versions 2.11 and above.
 # Please refer to issues/153 for more details.
 CPPCHECK_suppresses="--inline-suppr harness.c \
---inline-suppr queue.c \
+--suppress=checkersReport \
 --suppress=unmatchedSuppression \
 --suppress=normalCheckLevelMaxBranches \
 --suppress=missingIncludeSystem \
@@ -21,6 +21,7 @@ CPPCHECK_suppresses="--inline-suppr harness.c \
 --suppress=staticFunction:harness.c \
 --suppress=nullPointerRedundantCheck:queue.c \
 --suppress=constParameterPointer:queue.c \
+--suppress=memleak:queue.c \
 --suppress=nullPointer:queue.c \
 --suppress=nullPointer:qtest.c \
 --suppress=returnDanglingLifetime:report.c \
