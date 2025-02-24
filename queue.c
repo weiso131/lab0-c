@@ -32,6 +32,7 @@ void q_free(struct list_head *head)
     free(head);
 }
 
+
 bool __q_insert(struct list_head *head,
                 char *s,
                 void (*add_func)(struct list_head *node,
@@ -67,15 +68,38 @@ bool q_insert_tail(struct list_head *head, char *s)
     return __q_insert(head, s, list_add_tail);
 }
 
+
+
 /* Remove an element from head of queue */
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
+    if (head && list_empty(head) == 0) {
+        struct list_head *target = head->next;
+        element_t *target_entry = list_entry(target, element_t, list);
+        list_del(target);
+        if (sp) {
+            strncpy(sp, target_entry->value, bufsize - 1);
+            sp[bufsize - 1] = '\0';
+        }
+        return target_entry;
+    }
     return NULL;
 }
 
 /* Remove an element from tail of queue */
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
+    if (head && list_empty(head) == 0) {
+        struct list_head *target = head->prev;
+        element_t *target_entry = list_entry(target, element_t, list);
+        list_del(target);
+        if (sp) {
+            strncpy(sp, target_entry->value, bufsize - 1);
+            sp[bufsize - 1] = '\0';
+        }
+
+        return target_entry;
+    }
     return NULL;
 }
 
