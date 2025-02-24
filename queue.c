@@ -68,8 +68,6 @@ bool q_insert_tail(struct list_head *head, char *s)
     return __q_insert(head, s, list_add_tail);
 }
 
-
-
 /* Remove an element from head of queue */
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
@@ -141,7 +139,22 @@ bool q_delete_dup(struct list_head *head)
 /* Swap every two adjacent nodes */
 void q_swap(struct list_head *head)
 {
-    // https://leetcode.com/problems/swap-nodes-in-pairs/
+    if (head == NULL || list_empty(head) || list_is_singular(head))
+        return;
+    struct list_head *odd = head->next, *even = head->next->next;
+
+    while (odd != head && even != head) {
+        struct list_head *prev = odd->prev, *next = even->next;
+        odd->next = next;
+        next->prev = odd;
+        even->prev = prev;
+        prev->next = even;
+        odd->prev = even;
+        even->next = odd;
+
+        odd = next;
+        even = next->next;
+    }
 }
 
 /* Reverse elements in queue */
