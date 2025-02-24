@@ -55,7 +55,6 @@ bool __q_insert(struct list_head *head,
     return false;
 }
 
-
 /* Insert an element at head of queue */
 bool q_insert_head(struct list_head *head, char *s)
 {
@@ -158,7 +157,19 @@ void q_swap(struct list_head *head)
 }
 
 /* Reverse elements in queue */
-void q_reverse(struct list_head *head) {}
+void q_reverse(struct list_head *head)
+{
+    if (head == NULL || list_empty(head) || list_is_singular(head))
+        return;
+    struct list_head *tmp = head, *next = head->next, *prev = NULL;
+    do {
+        prev = tmp;
+        tmp->prev = next;
+        tmp = next;
+        next = next->next;
+        tmp->next = prev;
+    } while (tmp != head);
+}
 
 /* Reverse the nodes of the list k at a time */
 void q_reverseK(struct list_head *head, int k)
