@@ -274,7 +274,7 @@ void q_sort(struct list_head *head, bool descend)
     for (r = l; r->next != NULL; r = r->next)
         ;
     r->next = head;
-    head->prev = head;
+    head->prev = r;
 }
 
 /* Remove every node which has a node with a strictly less value anywhere to
