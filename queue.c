@@ -261,20 +261,40 @@ void q_sort(struct list_head *head, bool descend)
     head->prev = r;
 }
 
+int __monotonic(struct list_head *head, bool descend)
+{
+    if (head == NULL || list_empty(head))
+        return 0;
+    if (list_is_singular(head))
+        return 1;
+    int count = 0;
+    const char *last = list_entry(head->next, element_t, list)->value;
+    element_t *entry = NULL, *safe = NULL;
+    list_for_each_entry_safe (entry, safe, head, list) {
+        int cmp = strcmp(entry->value, last);
+        if ((cmp < 0) == descend || cmp == 0) {
+            last = entry->value;
+            count++;
+        } else {
+            list_del(&entry->list);
+            q_release_element(entry);
+        }
+    }
+    return count;
+}
+
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
 int q_ascend(struct list_head *head)
 {
-    // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    return __monotonic(head, false);
 }
 
 /* Remove every node which has a node with a strictly greater value anywhere to
  * the right side of it */
 int q_descend(struct list_head *head)
 {
-    // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    return __monotonic(head, true);
 }
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
