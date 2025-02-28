@@ -284,11 +284,13 @@ int __monotonic(struct list_head *head, bool descend)
     if (list_is_singular(head))
         return 1;
     int count = 0;
-    const char *last = list_entry(head->next, element_t, list)->value;
-    element_t *entry = NULL, *safe = NULL;
-    list_for_each_entry_safe (entry, safe, head, list) {
+    const char *last = "\0";
+
+    for (struct list_head *node = (head)->prev, *safe = node->prev;
+         node != (head); node = safe, safe = node->prev) {
+        element_t *entry = list_entry(node, element_t, list);
         int cmp = strcmp(entry->value, last);
-        if ((cmp < 0) == descend || cmp == 0) {
+        if ((cmp < 0) != descend || cmp == 0) {
             last = entry->value;
             count++;
         } else {
