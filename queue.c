@@ -252,23 +252,32 @@ struct list_head *__merge_sort(struct list_head *l, bool decend)
     return __merge(l, r, decend);
 }
 
+void __cut_head(struct list_head *head)
+{
+    head->next->prev = NULL;
+    head->prev->next = NULL;
+}
+
+void __link_head(struct list_head *head, struct list_head *start)
+{
+    start->prev = head;
+    head->next = start;
+    struct list_head *end = NULL;
+    for (end = start; end->next != NULL; end = end->next)
+        ;
+    end->next = head;
+    head->prev = end;
+}
+
+
 /* Sort elements of queue in ascending/descending order */
 void q_sort(struct list_head *head, bool descend)
 {
     if (head == NULL || list_empty(head) || list_is_singular(head))
         return;
-
-    struct list_head *l = head->next, *r = head->prev;
-    l->prev = NULL;
-    r->next = NULL;
-    l = __merge_sort(l, descend);
-
-    l->prev = head;
-    head->next = l;
-    for (r = l; r->next != NULL; r = r->next)
-        ;
-    r->next = head;
-    head->prev = r;
+    __cut_head(head);
+    struct list_head *node = __merge_sort(head->next, descend);
+    __link_head(head, node);
 }
 
 int __monotonic(struct list_head *head, bool descend)
@@ -322,8 +331,7 @@ int q_merge(struct list_head *head, bool descend)
     queue_contex_t *chain_entry = NULL;
     list_for_each_entry (chain_entry, head, chain) {
         chain[chain_cnt] = chain_entry->q->next;
-        chain_entry->q->next->prev = NULL;
-        chain_entry->q->prev->next = NULL;
+        __cut_head(chain_entry->q);
         INIT_LIST_HEAD(chain_entry->q);
         cnt += chain_entry->size;
         chain_cnt++;
@@ -333,14 +341,7 @@ int q_merge(struct list_head *head, bool descend)
         for (int j = 0; j < chain_size; j += i << 1)
             chain[j] = __merge(chain[j], chain[j + i], descend);
 
-    q_head->next = chain[0];
-    chain[0]->prev = q_head;
-    struct list_head *r = NULL;
-    for (r = chain[0]; r->next != NULL; r = r->next)
-        ;
-
-    r->next = q_head;
-    q_head->prev = r;
+    __link_head(q_head, chain[0]);
 
     return cnt;
 }
