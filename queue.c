@@ -143,19 +143,25 @@ void q_swap(struct list_head *head)
     q_reverseK(head, 2);
 }
 
+/* Reverse the linklist nodes from start to end */
+void __reverse(struct list_head *start, struct list_head *end)
+{
+    struct list_head *next = start->next, *prev = NULL;
+    do {
+        prev = start;
+        start->prev = next;
+        start = next;
+        next = next->next;
+        start->next = prev;
+    } while (start != end);
+}
+
 /* Reverse elements in queue */
 void q_reverse(struct list_head *head)
 {
     if (head == NULL || list_empty(head) || list_is_singular(head))
         return;
-    struct list_head *tmp = head, *next = head->next, *prev = NULL;
-    do {
-        prev = tmp;
-        tmp->prev = next;
-        tmp = next;
-        next = next->next;
-        tmp->next = prev;
-    } while (tmp != head);
+    __reverse(head, head);
 }
 
 int __move_k(struct list_head *head, struct list_head **node, int k)
@@ -169,14 +175,7 @@ int __move_k(struct list_head *head, struct list_head **node, int k)
 void __reverse_k(struct list_head *start, struct list_head *end)
 {
     struct list_head *l = start->prev, *r = end->next;
-    struct list_head *tmp = start, *next = start->next, *prev = NULL;
-    while (next != r) {
-        prev = tmp;
-        tmp->prev = next;
-        tmp = next;
-        next = next->next;
-        tmp->next = prev;
-    }
+    __reverse(start, end);
     l->next = end;
     end->prev = l;
     r->prev = start;
