@@ -140,22 +140,7 @@ bool q_delete_dup(struct list_head *head)
 /* Swap every two adjacent nodes */
 void q_swap(struct list_head *head)
 {
-    if (head == NULL || list_empty(head) || list_is_singular(head))
-        return;
-    struct list_head *odd = head->next, *even = head->next->next;
-
-    while (odd != head && even != head) {
-        struct list_head *prev = odd->prev, *next = even->next;
-        odd->next = next;
-        next->prev = odd;
-        even->prev = prev;
-        prev->next = even;
-        odd->prev = even;
-        even->next = odd;
-
-        odd = next;
-        even = next->next;
-    }
+    q_reverseK(head, 2);
 }
 
 /* Reverse elements in queue */
