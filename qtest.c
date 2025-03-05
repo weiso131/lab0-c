@@ -1079,7 +1079,7 @@ void q_shuffle(struct list_head *head)
             ;
         new_node = new_node->prev;
         if (new_node == old_node)
-            old_node = old_node->prev;
+            continue;
         __entry_swap(old_node, new_node);
     }
 }
