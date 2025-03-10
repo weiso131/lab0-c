@@ -270,7 +270,37 @@ void __link_head(struct list_head *head, struct list_head *start)
 }
 
 
-/* Sort elements of queue in ascending/descending order */
+static struct list_head *merge(struct list_head *a,
+                               struct list_head *b,
+                               bool descend)
+{
+    struct list_head *head = NULL, **tail = &head;
+
+    for (;;) {
+        /* if equal, take 'a' -- important for sort stability */
+        const char *l_value = list_entry(a, element_t, list)->value,
+                   *r_value = list_entry(b, element_t, list)->value;
+        if ((strcmp(l_value, r_value) > 0) == descend) {
+            *tail = a;
+            tail = &a->next;
+            a = a->next;
+            if (!a) {
+                *tail = b;
+                break;
+            }
+        } else {
+            *tail = b;
+            tail = &b->next;
+            b = b->next;
+            if (!b) {
+                *tail = a;
+                break;
+            }
+        }
+    }
+    return head;
+}
+
 void q_sort(struct list_head *head, bool descend)
 {
     if (head == NULL || list_empty(head) || list_is_singular(head))
@@ -325,23 +355,47 @@ int q_merge(struct list_head *head, bool descend)
     if (head == NULL || list_empty(head))
         return 0;
 
-    int chain_size = q_size(head), cnt = 0, chain_cnt = 0;
-    struct list_head *chain[1000];
+    int cnt = 0;
     struct list_head *q_head = list_first_entry(head, queue_contex_t, chain)->q;
     queue_contex_t *chain_entry = NULL;
+
+    struct list_head r0, r1;
+    r0.prev = NULL;
+    INIT_LIST_HEAD(&r1);
+
     list_for_each_entry (chain_entry, head, chain) {
-        chain[chain_cnt] = chain_entry->q->next;
+        struct list_head *first = chain_entry->q->next;
         __cut_head(chain_entry->q);
         INIT_LIST_HEAD(chain_entry->q);
         cnt += chain_entry->size;
-        chain_cnt++;
+        first->prev = r0.prev;
+        r0.prev = first;
     }
 
-    for (int i = 1; i < chain_size; i = i << 1)
-        for (int j = 0; j < chain_size; j += i << 1)
-            chain[j] = __merge(chain[j], chain[j + i], descend);
+    while (1) {
+        if (r0.prev == NULL || r0.prev->prev == NULL) {
+            r1.next->prev = r0.prev;
+            r0.prev = r1.prev;
+            INIT_LIST_HEAD(&r1);
+        }
+        if (r0.prev->prev == NULL)
+            break;
+        struct list_head *l = r0.prev->prev, *r = r0.prev;
 
-    __link_head(q_head, chain[0]);
+        r0.prev = l->prev;
+        l = merge(l, r, descend);
+        r1.next->prev = l;
+        r1.next = l;
+    }
+
+    q_head->next = r0.prev;
+    struct list_head *node = q_head;
+
+    for (; node->next != NULL; node = node->next) {
+        node->next->prev = node;
+    }
+    q_head->prev = node;
+    node->next = q_head;
 
     return cnt;
 }
