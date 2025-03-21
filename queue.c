@@ -258,18 +258,6 @@ void __cut_head(struct list_head *head)
     head->prev->next = NULL;
 }
 
-void __link_head(struct list_head *head, struct list_head *start)
-{
-    start->prev = head;
-    head->next = start;
-    struct list_head *end = NULL;
-    for (end = start; end->next != NULL; end = end->next)
-        ;
-    end->next = head;
-    head->prev = end;
-}
-
-
 static struct list_head *merge(struct list_head *a,
                                struct list_head *b,
                                bool descend)
@@ -301,13 +289,97 @@ static struct list_head *merge(struct list_head *a,
     return head;
 }
 
+static void merge_final(struct list_head *head,
+                        struct list_head *a,
+                        struct list_head *b,
+                        bool descend)
+{
+    struct list_head *tail = head;
+
+    for (;;) {
+        /* if equal, take 'a' -- important for sort stability */
+        const char *l_value = list_entry(a, element_t, list)->value,
+                   *r_value = list_entry(b, element_t, list)->value;
+        if ((strcmp(l_value, r_value) > 0) == descend) {
+            tail->next = a;
+            a->prev = tail;
+            tail = a;
+            a = a->next;
+            if (!a)
+                break;
+        } else {
+            tail->next = b;
+            b->prev = tail;
+            tail = b;
+            b = b->next;
+            if (!b) {
+                b = a;
+                break;
+            }
+        }
+    }
+
+    /* Finish linking remainder of list b on to tail */
+    tail->next = b;
+    do {
+        b->prev = tail;
+        tail = b;
+        b = b->next;
+    } while (b);
+
+    /* And the final links to make a circular doubly-linked list */
+    tail->next = head;
+    head->prev = tail;
+}
+
 void q_sort(struct list_head *head, bool descend)
 {
-    if (head == NULL || list_empty(head) || list_is_singular(head))
+    struct list_head *list = head->next, *pending = NULL;
+    size_t count = 0; /* Count of pending */
+
+    if (list == head->prev) /* Zero or one elements */
         return;
-    __cut_head(head);
-    struct list_head *node = __merge_sort(head->next, descend);
-    __link_head(head, node);
+
+    /* Convert to a null-terminated singly-linked list. */
+    head->prev->next = NULL;
+    do {
+        size_t bits;
+        struct list_head **tail = &pending;
+
+        /* Find the least-significant clear bit in count */
+        for (bits = count; bits & 1; bits >>= 1)
+            tail = &(*tail)->prev;
+        /* Do the indicated merge */
+        if (bits) {
+            struct list_head *a = *tail, *b = a->prev;
+
+            a = merge(b, a, descend);
+            /* Install the merged result in place of the inputs */
+            a->prev = b->prev;
+            *tail = a;
+        }
+
+        /* Move one element from input list to pending */
+        list->prev = pending;
+        pending = list;
+        list = list->next;
+        pending->next = NULL;
+        count++;
+    } while (list);
+
+    /* End of input; merge together all the pending lists. */
+    list = pending;
+    pending = pending->prev;
+    for (;;) {
+        struct list_head *next = pending->prev;
+
+        if (!next)
+            break;
+        list = merge(pending, list, descend);
+        pending = next;
+    }
+    /* The final merge, rebuilding prev links */
+    merge_final(head, pending, list, descend);
 }
 
 int __monotonic(struct list_head *head, bool descend)
