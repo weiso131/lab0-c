@@ -426,6 +426,8 @@ int q_merge(struct list_head *head, bool descend)
 {
     if (head == NULL || list_empty(head))
         return 0;
+    if (list_is_singular(head))
+        return list_first_entry(head, queue_contex_t, chain)->size;
 
     int cnt = 0;
     struct list_head *q_head = list_first_entry(head, queue_contex_t, chain)->q;
@@ -450,7 +452,7 @@ int q_merge(struct list_head *head, bool descend)
             r0.prev = r1.prev;
             INIT_LIST_HEAD(&r1);
         }
-        if (r0.prev->prev == NULL)
+        if (list_empty(&r1) && r0.prev->prev->prev == NULL)
             break;
         struct list_head *l = r0.prev->prev, *r = r0.prev;
 
@@ -459,15 +461,7 @@ int q_merge(struct list_head *head, bool descend)
         r1.next->prev = l;
         r1.next = l;
     }
-
-    q_head->next = r0.prev;
-    struct list_head *node = q_head;
-
-    for (; node->next != NULL; node = node->next) {
-        node->next->prev = node;
-    }
-    q_head->prev = node;
-    node->next = q_head;
+    merge_final(q_head, r0.prev->prev, r0.prev, descend);
 
     return cnt;
 }
